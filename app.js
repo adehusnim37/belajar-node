@@ -13,6 +13,9 @@ mongoose
   })
   .then(() => {
     console.log('Database telah terkonek');
+  })
+  .catch((err) => {
+    console.log(err);
   });
 
 const app = express();
