@@ -1,23 +1,23 @@
 const { faker } = require('@faker-js/faker');
 const Tour = require('../Model/TourModel');
+const APIFeatures = require('../utiltys/apiFeatures');
+
+const aliasTopTour = (req, res, next) => {
+  req.query.limit = '5';
+  req.query.sort = '-ratings,price';
+  req.query.fields = 'name,price,ratingsAverage,summary,difficulty';
+
+  next();
+};
 
 const getAllTours = async (req, res) => {
   try {
-    const queryObject = { ...req.query }; // mengeluarkan semua object yang diminta oleh query dan dijadikan menjadi object
-    const excludeFields = ['page', 'sort', 'limit', 'fields'];
-    excludeFields.forEach((el) => delete queryObject[el]);
-
-    let queryStr = JSON.stringify(queryObject);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    let query = Tour.find(JSON.parse(queryStr));
-
-    if (req.body.short) {
-      const sortBy = req.query.sort.split(',').join(' ');
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort('-createdAt');
-    }
-    const tour = await query;
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
+    const tour = await features.query;
     res.status(200).json({
       status: 'success',
       result: `Data anda adalah ${tour.length}`,
@@ -56,7 +56,7 @@ const createTour = async (req, res) => {
       description: faker.lorem.words({ min: 50, max: 150 }),
       ratingQuantity: faker.number.int({ min: 0, max: 1000 }),
       price: faker.number.int({ min: 100, max: 1000 }),
-      rating: faker.number.float({ min: 1, max: 5, precision: 0.1 }),
+      avgRating: faker.number.float({ min: 1, max: 5, precision: 0.1 }),
       duration: faker.number.int({ min: 1, max: 10 }), // Adjust the min and max values based on your requirements
       maxGroupSize: faker.number.int({ min: 1, max: 20 }), // Adjust the min and max values based on your requirements
       difficulty: faker.helpers.arrayElement(['easy', 'normal', 'hard']),
@@ -127,10 +127,80 @@ const deleteTour = async (req, res) => {
   }
 };
 
+const getToursStats = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      { $match: { rating: { $gte: 1 } } },
+      {
+        $group: {
+          _id: '$difficulty',
+          numTours: { $sum: 1 },
+          numRatings: { $sum: '$ratingQuantity' },
+          avgRating: { $avg: '$rating' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+      {
+        $sort: { avgPrice: 1 },
+      },
+    ]);
+    res.status(200).json({
+      status: 'success',
+      data: { stats },
+      message: 'Tour statistics successfully retrieved',
+    });
+  } catch (err) {
+    res.status(204).json({
+      status: 'success',
+      data: null,
+      message: err.message,
+    });
+  }
+};
+
+const monthlyPlan = async (req, res) => {
+  try {
+    const year = Number(req.params.year);
+    const plan = await Tour.aggregate([
+      {
+        $unwind: '$startDates',
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: { _id: { $month: '$startDates' } },
+        numTourStarts: { $sum: 1 },
+        tours: { $push: 'name' },
+      },
+    ]);
+    res.status(200).json({
+      status: 'success',
+      data: { plan },
+      message: 'Tour statistics successfully retrieved',
+    });
+  } catch (err) {
+    res.status(204).json({
+      status: 'success',
+      data: null,
+      message: err.message,
+    });
+  }
+};
 module.exports = {
   deleteTour,
   createTour,
   updateTour,
   getTour,
   getAllTours,
+  aliasTopTour,
+  getToursStats,
+  monthlyPlan,
 };

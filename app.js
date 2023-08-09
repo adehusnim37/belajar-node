@@ -8,14 +8,15 @@ const tourRoutes = require('./Routes/TourRoutes');
 const userRoutes = require('./Routes/UserRoutes');
 
 mongoose
-  .connect(process.env.DATABASEURI, {
+  .connect(process.env.MONGO_URI, {
     useNewUrlParser: true,
+    useUnifiedTopology: true,
   })
   .then(() => {
     console.log('Database telah terkonek');
   })
   .catch((err) => {
-    console.log(err);
+    console.log(err.message);
   });
 
 const app = express();
