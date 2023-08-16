@@ -1,5 +1,6 @@
 const { faker } = require('@faker-js/faker');
 const Tour = require('../Model/TourModel');
+const AppError = require('../utiltys/appError');
 const APIFeatures = require('../utiltys/apiFeatures');
 
 const aliasTopTour = (req, res, next) => {
@@ -31,10 +32,19 @@ const getAllTours = async (req, res) => {
   }
 };
 
-const getTour = async (req, res) => {
+const getTour = async (req, res, next) => {
   try {
     const { id } = req.params;
     const tour = await Tour.findById(id);
+
+    if (!tour) {
+      return next(
+        new AppError(
+          `tidak bisa menemukan tour id ${id} pada server ini !`,
+          404,
+        ),
+      );
+    }
     res.status(200).json({
       status: 'success',
       data: {
