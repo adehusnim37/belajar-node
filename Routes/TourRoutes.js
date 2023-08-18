@@ -9,7 +9,7 @@ const {
   getToursStats,
   monthlyPlan,
 } = require('../controller/tourController');
-const { Protects } = require('../controller/Auth/AuthController');
+const { Protects, RestrictTo } = require('../controller/Auth/AuthController');
 
 const router = express.Router();
 router.route('/top5').get(aliasTopTour, getAllTours);
@@ -18,6 +18,10 @@ router.route('/monthly-plan/:year').get(monthlyPlan);
 
 //router.param('id', checkId);
 router.route('/').get(Protects, getAllTours).post(createTour);
-router.route('/:id').get(getTour).patch(updateTour).delete(deleteTour);
+router
+  .route('/:id')
+  .get(getTour)
+  .patch(updateTour)
+  .delete(Protects, RestrictTo('admin', 'lead-guide'), deleteTour);
 
 module.exports = router;
