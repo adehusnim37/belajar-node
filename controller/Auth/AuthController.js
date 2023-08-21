@@ -2,6 +2,8 @@ const fs = require('fs');
 const { promisify } = require('util');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
+const moment = require('moment');
+const validator = require('validator');
 const User = require('../../Model/UserModel');
 const AppError = require('../../utiltys/appError');
 const SendEmail = require('../../utiltys/NodeMailer');
@@ -13,9 +15,27 @@ const signToken = (id) =>
     expiresIn: process.env.JWT_EXPIRE_IN,
   });
 
+// ... other imports and code
+
 const sendToken = (user, StatusCode, message, res) => {
   const token = signToken(user._id);
 
+  const expirationDate = moment()
+    .add(process.env.JWT_COOKIE_EXPIRE_IN, 'days')
+    .toDate();
+
+  const cookieOptions = {
+    expires: expirationDate,
+    httpOnly: true,
+  };
+
+  if (process.env.NODE_ENV === 'production') {
+    cookieOptions.secure = true;
+  }
+
+  res.cookie('jwt', token, cookieOptions);
+  //remove the password from the output
+  user.password = undefined;
   res.status(StatusCode).json({
     status: 'success',
     token: token,
@@ -80,7 +100,9 @@ const login = async (req, res, next) => {
 
     sendToken(user, 201, 'Success Login', res);
   } catch (err) {
-    console.log(err);
+    res.status(401).json({
+      message: err.message,
+    });
   }
 };
 

@@ -2,21 +2,21 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
-const { resetPass } = require('../controller/Auth/AuthController');
 
+const isAlphaSpaces = (value) => /^[A-Za-z\s]+$/.test(value);
 const UserSchema = new mongoose.Schema({
   name: {
     type: String,
     required: [true, 'Please tell me your name'],
-    maxLength: [35, 'name must have less or equal 35 characters'],
-    minLength: [5, 'tour must have less or equal 5 characters'],
-    validator: [validator.isAlphanumeric, 'Nama Harus Karakter'],
+    maxLength: [35, 'Name must have less or equal 35 characters'],
+    minLength: [5, 'Name must have less or equal 5 characters'],
+    validate: [isAlphaSpaces, 'Nama Harus Karakter'],
   },
   email: {
     type: String,
     required: true,
     unique: true,
-    validator: [validator.isEmail, 'Harus bertype email'],
+    validate: [validator.isEmail, 'Harus bertype email'],
     lowercase: true,
   },
   photo: {
@@ -47,6 +47,11 @@ const UserSchema = new mongoose.Schema({
   passwordChangeAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  Active: {
+    type: Boolean,
+    default: true,
+    select: false,
+  },
 });
 
 UserSchema.pre('save', async function (next) {
@@ -63,6 +68,11 @@ UserSchema.pre('save', async function (next) {
   //password belum diubah atau seorang membuat user create akun baru
 
   this.passwordChangeAt = Date.now() - 5000;
+  next();
+});
+
+UserSchema.pre(/^find/, function (next) {
+  this.find({ Active: { $ne: false } });
   next();
 });
 

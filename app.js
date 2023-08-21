@@ -1,7 +1,11 @@
 const express = require('express');
 const morgan = require('morgan');
-// eslint-disable-next-line import/no-extraneous-dependencies
-const mongoose = require('mongoose');
+const helmet = require('helmet');
+const moment = require('moment');
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 require('dotenv').config();
 
 const AppError = require('./utiltys/appError');
@@ -9,22 +13,38 @@ const GlobalErrHandler = require('./controller/errorController');
 const tourRoutes = require('./Routes/TourRoutes');
 const userRoutes = require('./Routes/UserRoutes');
 
-mongoose
-  .connect(process.env.MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
-  .then(() => {
-    console.log('Database telah terkonek');
-  })
-  .catch((err) => {
-    console.log(err.message);
-  });
-
 const app = express();
+app.use(helmet());
+app.use(GlobalErrHandler);
 
+const limiter = rateLimit({
+  max: 50,
+  windowMs: moment.duration(1, 'hour').asMilliseconds(), // Set windowMs to 1 hour in milliseconds
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: 'To many request, please try again later in a hour',
+});
+
+app.use('/api', limiter);
 app.use(morgan('dev'));
-app.use(express.json());
+//body parser, reading data from req.body
+app.use(express.json({ limit: '10kb' }));
+
+//serving static files
+app.use(express.static(`${__dirname}/public`));
+
+//data sanitization against no sql query injection
+app.use(mongoSanitize());
+
+//data sanitize xss
+app.use(xss());
+
+//prevent parameter polution
+app.use(
+  hpp({
+    whitelist: ['duration'],
+  }),
+);
 
 app.use('/api/v1/tours', tourRoutes);
 app.use('/api/v1/user', userRoutes);
@@ -40,7 +60,5 @@ app.all('*', (req, res, next) => {
     ),
   );
 });
-
-app.use(GlobalErrHandler);
 
 module.exports = app;
