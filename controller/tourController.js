@@ -2,6 +2,7 @@ const { faker } = require('@faker-js/faker');
 const Tour = require('../Model/TourModel');
 const AppError = require('../utiltys/appError');
 const APIFeatures = require('../utiltys/apiFeatures');
+const { Delete, Update, Get } = require('./handler');
 
 const aliasTopTour = (req, res, next) => {
   req.query.limit = '5';
@@ -32,32 +33,33 @@ const getAllTours = async (req, res) => {
   }
 };
 
-const getTour = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const tour = await Tour.findById(id);
-
-    if (!tour) {
-      return next(
-        new AppError(
-          `tidak bisa menemukan tour id ${id} pada server ini !`,
-          404,
-        ),
-      );
-    }
-    res.status(200).json({
-      status: 'success',
-      data: {
-        tour,
-      },
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'failed',
-      message: err,
-    });
-  }
-};
+const getTour = Get.getOne(Tour, { path: 'reviews' });
+// const getTour = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const tour = await Tour.findById(id).populate('reviews');
+//
+//     if (!tour) {
+//       return next(
+//         new AppError(
+//           `tidak bisa menemukan tour id ${id} pada server ini !`,
+//           404,
+//         ),
+//       );
+//     }
+//     res.status(200).json({
+//       status: 'success',
+//       data: {
+//         tour,
+//       },
+//     });
+//   } catch (err) {
+//     res.status(404).json({
+//       status: 'failed',
+//       message: err.message,
+//     });
+//   }
+// };
 
 const createTour = async (req, res) => {
   try {
@@ -75,6 +77,7 @@ const createTour = async (req, res) => {
       imageCover: faker.image.url(),
       images: Array.from({ length: 3 }, () => faker.image.url()),
       startDates: [faker.date.future(), faker.date.future()],
+      guides: req.body.guides,
       // Add other properties as needed
     };
     const newTour = await Tour.create(newTourData);
@@ -90,52 +93,54 @@ const createTour = async (req, res) => {
   }
 };
 
-const updateTour = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const tour = await Tour.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true,
-    });
-    res.status(200).json({
-      status: 'success',
-      data: {
-        tour,
-      },
-    });
-  } catch (err) {
-    res.status(404).json({
-      status: 'failed',
-      message: err,
-    });
-  }
-};
+const updateTour = Update.updateOne(Tour);
+// const updateTour = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const tour = await Tour.findByIdAndUpdate(id, req.body, {
+//       new: true,
+//       runValidators: true,
+//     });
+//     res.status(200).json({
+//       status: 'success',
+//       data: {
+//         tour,
+//       },
+//     });
+//   } catch (err) {
+//     res.status(404).json({
+//       status: 'failed',
+//       message: err,
+//     });
+//   }
+// };
 
-const deleteTour = async (req, res) => {
-  try {
-    const { id } = req.params; //mengambil property id didalam objek
-    const newTour = await Tour.findByIdAndDelete(id);
-
-    if (!newTour) {
-      // If the tour was not found
-      return res.status(404).json({
-        status: 'failed',
-        message: 'Tour not found',
-      });
-    }
-    res.status(201).json({
-      status: 'success',
-      data: null,
-      message: 'Tour successfully deleted',
-    });
-  } catch (err) {
-    res.status(204).json({
-      status: 'success',
-      data: null,
-      message: err.message,
-    });
-  }
-};
+const deleteTour = Delete.deleteOne(Tour);
+// const deleteTour = async (req, res) => {
+//   try {
+//     const { id } = req.params; //mengambil property id didalam objek
+//     const newTour = await Tour.findByIdAndDelete(id);
+//
+//     if (!newTour) {
+//       // If the tour was not found
+//       return res.status(404).json({
+//         status: 'failed',
+//         message: 'Tour not found',
+//       });
+//     }
+//     res.status(201).json({
+//       status: 'success',
+//       data: null,
+//       message: 'Tour successfully deleted',
+//     });
+//   } catch (err) {
+//     res.status(204).json({
+//       status: 'success',
+//       data: null,
+//       message: err.message,
+//     });
+//   }
+// };
 
 const getToursStats = async (req, res) => {
   try {

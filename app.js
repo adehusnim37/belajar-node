@@ -12,6 +12,7 @@ const AppError = require('./utiltys/appError');
 const GlobalErrHandler = require('./controller/errorController');
 const tourRoutes = require('./Routes/TourRoutes');
 const userRoutes = require('./Routes/UserRoutes');
+const reviewRoutes = require('./Routes/ReviewRoutes');
 
 const app = express();
 app.use(helmet());
@@ -46,8 +47,10 @@ app.use(
   }),
 );
 
+// kumpulan dari routes
 app.use('/api/v1/tours', tourRoutes);
-app.use('/api/v1/user', userRoutes);
+app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/review', reviewRoutes);
 app.all('*', (req, res, next) => {
   // res.status(404).json({
   //   status: 'failed',

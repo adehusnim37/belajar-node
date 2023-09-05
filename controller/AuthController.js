@@ -4,9 +4,9 @@ const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
 const validator = require('validator');
-const User = require('../../Model/UserModel');
-const AppError = require('../../utiltys/appError');
-const SendEmail = require('../../utiltys/NodeMailer');
+const User = require('../Model/UserModel');
+const AppError = require('../utiltys/appError');
+const SendEmail = require('../utiltys/NodeMailer');
 
 const verify = promisify(jwt.verify); //membungkus function dalam function supaya bisa digunakan
 

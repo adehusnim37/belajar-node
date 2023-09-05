@@ -1,5 +1,6 @@
 const AppError = require('../utiltys/appError');
 const Users = require('../Model/UserModel');
+const { Delete, Update, Get } = require('./handler');
 
 const filterObj = (obj, ...allowedFields) => {
   const newObject = {};
@@ -8,11 +9,21 @@ const filterObj = (obj, ...allowedFields) => {
   });
   return newObject;
 };
-const getAllUsers = (req, res) => {
-  res.send(200).json({
-    status: 'berhasil',
-    message: 'berhasil mendapatkan semua user',
-  });
+const getAllUsers = async (req, res) => {
+  try {
+    const getAll = await Users.find();
+    res.status(200).json({
+      status: 'berhasil',
+      data: { users: getAll },
+      message: 'berhasil mendapatkan semua user',
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'Failed',
+      data: 'Null',
+      message: err.message,
+    });
+  }
 };
 
 const UpdateMe = async (req, res, next) => {
@@ -55,31 +66,16 @@ const deleteMe = async (req, res, next) => {
   }
 };
 
-const getUser = (req, res) => {
-  res.send(200).json({
-    status: 'berhasil',
-    message: 'berhasil mendapatkan semua user',
-  });
-};
+const getUser = Get.getOne(Users);
 
-const deleteUser = (req, res) => {
-  res.send(200).json({
-    status: 'berhasil',
-    message: 'berhasil mendapatkan semua user',
-  });
-};
+const deleteUser = Delete.deleteOne(Users);
 
-const updateUser = (req, res) => {
-  res.send(200).json({
-    status: 'berhasil',
-    message: 'berhasil mendapatkan semua user',
-  });
-};
+const updateUser = Update.updateOne(Users);
 
 const createUser = (req, res) => {
-  res.send(200).json({
-    status: 'berhasil',
-    message: 'berhasil mendapatkan semua user',
+  res.send(404).json({
+    status: 'error',
+    message: 'Please Use the signup !',
   });
 };
 
