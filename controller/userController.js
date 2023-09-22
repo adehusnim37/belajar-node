@@ -66,6 +66,18 @@ const deleteMe = async (req, res, next) => {
   }
 };
 
+const getMe = (req, res, next) => {
+  try {
+    req.params.id = req.user.id;
+    next();
+  } catch (err) {
+    res.status(400).json({
+      status: 'failed',
+      message: err.message,
+    });
+  }
+};
+
 const getUser = Get.getOne(Users);
 
 const deleteUser = Delete.deleteOne(Users);
@@ -87,4 +99,5 @@ module.exports = {
   getUser,
   UpdateMe,
   deleteMe,
+  getMe,
 };

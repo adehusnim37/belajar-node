@@ -47,5 +47,34 @@ reviewSchema.pre(/^find/, function (next) {
   next();
 });
 
+reviewSchema.statics.calcAverageRatings = async function (tourId) {
+  // 'this' points to the current model
+  const stats = await this.aggregate([
+    {
+      $match: { tour: tourId },
+    },
+    {
+      $group: {
+        // _id: '$tour', // Group by tour
+        _id: null, // Group all reviews
+        nRating: { $sum: 1 }, // menambahkan 1 setiap kali ada review
+        avgRating: { $avg: '$rating' }, // Calculate average rating
+      },
+    },
+  ]);
+
+  // Update tour document
+  await Tour.findByIdAndUpdate(tourId, {
+    // mencari tour berdasarkan id
+    ratingQuantity: stats[0].nRating, // mengupdate ratingQuantity
+    avgRating: stats[0].avgRating, // mengupdate ratingAverage, stats[0] karena hasil dari aggregate adalah array
+  });
+};
+
+reviewSchema.post('save', function () {
+  // 'this' points to the current document
+  this.constructor.calcAverageRatings(this.tour); //this.constructor adalah model yang saat ini dipakai
+});
+
 const Review = mongoose.model('Review', reviewSchema);
 module.exports = Review;

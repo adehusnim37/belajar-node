@@ -14,7 +14,7 @@ const createReview = async (req, res, next) => {
     }
     const ReviewData = {
       review: faker.lorem.words({ min: 10, max: 100 }),
-      rating: faker.number.float({ min: 1, max: 5, precision: 0.1 }),
+      rating: faker.number.float({ min: 3, max: 5, precision: 0.1 }),
       Date: moment(),
       user: req.body.user,
       tour: req.body.tour,
@@ -52,7 +52,7 @@ const GetAllReview = async (req, res, next) => {
   }
 };
 
-const DeleteReview = Delete.deleteOne(Review);
+const DeleteReview = Delete.deleteOne(Review, 'user');
 const UpdateReview = Update.updateOne(Review);
 const GetAReview = Get.getOne(Review);
 

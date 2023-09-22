@@ -18,15 +18,17 @@ const app = express();
 app.use(helmet());
 app.use(GlobalErrHandler);
 
-const limiter = rateLimit({
-  max: 50,
-  windowMs: moment.duration(1, 'hour').asMilliseconds(), // Set windowMs to 1 hour in milliseconds
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: 'To many request, please try again later in a hour',
-});
+const createLimiter = (limit) =>
+  rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour window
+    max: limit, // Max number of requests within the window
+    message: 'Too many requests, please try again later.',
+  });
 
-app.use('/api', limiter);
+app.use('/api/v1/users', createLimiter(20));
+app.use('/api/v1/tours', createLimiter(50));
+app.use('/api/v1/review', createLimiter(20));
+
 app.use(morgan('dev'));
 //body parser, reading data from req.body
 app.use(express.json({ limit: '10kb' }));

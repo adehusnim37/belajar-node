@@ -9,22 +9,29 @@ const {
   getToursStats,
   monthlyPlan,
 } = require('../controller/tourController');
-const { Protects, RestrictTo } = require('../controller/AuthController');
+const {
+  Protects,
+  RestrictTo,
+  allowUserAccess,
+} = require('../controller/AuthController');
 const reviewRouter = require('./ReviewRoutes');
 
-const router = express.Router();
-router.route('/top5').get(aliasTopTour, getAllTours);
-router.route('/tours-stats').get(getToursStats);
-router.route('/monthly-plan/:year').get(monthlyPlan);
+const tourRouter = express.Router();
 
-//router.param('id', checkId);
-router.route('/').get(Protects, getAllTours).post(createTour);
-router
+tourRouter.use('/:tourId/reviews', reviewRouter);
+tourRouter.route('/top5').get(aliasTopTour, getAllTours);
+tourRouter.route('/tours-stats').get(getToursStats);
+
+tourRouter.use(Protects); /// protect all routes after this middleware
+tourRouter
+  .route('/monthly-plan/:year')
+  .get(RestrictTo('admin', 'lead-guide', 'guide'), monthlyPlan);
+
+tourRouter
   .route('/:id')
-  .get(getTour)
-  .patch(updateTour)
-  .delete(Protects, RestrictTo('admin', 'lead-guide'), deleteTour);
+  .get(RestrictTo('admin', 'lead-guide', 'user'), getTour);
+tourRouter.use(RestrictTo('admin', 'lead-guide')); /// protect all routes to admin users and lead guide after this middleware
+tourRouter.route('/').get(getAllTours).post(createTour);
+tourRouter.route('/:id').patch(updateTour).delete(deleteTour);
 
-router.use('/:tourId/reviews', reviewRouter);
-
-module.exports = router;
+module.exports = tourRouter;

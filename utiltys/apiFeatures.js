@@ -6,10 +6,10 @@ class APIFeatures {
 
   filter() {
     const queryObject = { ...this.queryString }; // mengeluarkan semua object yang diminta oleh query dan dijadikan menjadi object
-    const excludeFields = ['page', 'sort', 'limit', 'fields'];
-    excludeFields.forEach((el) => delete queryObject[el]);
+    const excludeFields = ['page', 'sort', 'limit', 'fields']; //mengeluarkan semua object yang tidak diminta oleh query
+    excludeFields.forEach((el) => delete queryObject[el]); //menghapus semua object yang tidak diminta oleh query
 
-    let queryStr = JSON.stringify(queryObject);
+    let queryStr = JSON.stringify(queryObject); //mengubah object menjadi string
     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
     this.query = this.query.find(JSON.parse(queryStr));
     return this;

@@ -1,5 +1,3 @@
-const { Model } = require('mongoose');
-const Tour = require('../../Model/TourModel');
 const AppError = require('../../utiltys/appError');
 
 exports.getOne = (Model, popOptions) => async (req, res, next) => {

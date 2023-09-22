@@ -113,6 +113,10 @@ tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
 });
 
+//index untuk mempercepat pencarian
+tourSchema.index({ price: 1, ratingsAverage: -1 }); //1 untuk ascending -1 untuk descending
+tourSchema.index({ slug: 1 }); //slug untuk mempercepat pencarian
+
 //query middleware
 tourSchema.pre(/^find/, function (next) {
   this.populate({

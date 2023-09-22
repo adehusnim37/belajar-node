@@ -3,7 +3,6 @@ const { promisify } = require('util');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const moment = require('moment');
-const validator = require('validator');
 const User = require('../Model/UserModel');
 const AppError = require('../utiltys/appError');
 const SendEmail = require('../utiltys/NodeMailer');
@@ -113,17 +112,17 @@ const Protects = async (req, res, next) => {
       req.headers.authorization &&
       req.headers.authorization.startsWith('Bearer')
     ) {
-      token = req.headers.authorization.split(' ')[1];
+      token = req.headers.authorization.split(' ')[1]; //mengambil token dari header
     }
+    const decoded = await verify(token, process.env.JWT_SECRET);
 
     if (!token) {
       return next(
         new AppError(`Kamu harus login, untuk mengakses halaman ini !`, 401),
       );
     }
-    const decoded = await verify(token, process.env.JWT_SECRET);
 
-    const currentUser = await User.findById(decoded.id);
+    const currentUser = await User.findById(decoded.id); //mencari user berdasarkan id yang ada di token
     if (!currentUser) {
       return next(new AppError(`The token is no longer exist !`, 401));
     }

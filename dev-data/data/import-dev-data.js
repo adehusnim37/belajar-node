@@ -4,11 +4,16 @@ require('dotenv').config({ path: '.env' });
 const mongoose = require('mongoose');
 
 const Tour = require('../../Model/TourModel');
+const User = require('../../Model/UserModel');
+const Review = require('../../Model/reviewModel');
 
 mongoose
-  .connect('mongodb://adehusnim:ryugamine123@157.230.251.148:27017/natours', {
-    useNewUrlParser: true,
-  })
+  .connect(
+    'mongodb://adehusnim:ryugamine123@mongo.database.gempabu.my.id:27017/natours',
+    {
+      useNewUrlParser: true,
+    },
+  )
   .then(() => {
     console.log('Database telah terkonek');
   })
@@ -17,13 +22,17 @@ mongoose
   });
 
 //Import Data
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/tours-simple.json`, 'utf-8'),
+const tours = JSON.parse(fs.readFileSync(`${__dirname}/tours.json`, 'utf-8'));
+const users = JSON.parse(fs.readFileSync(`${__dirname}/users.json`, 'utf-8'));
+const reviews = JSON.parse(
+  fs.readFileSync(`${__dirname}/reviews.json`, 'utf-8'),
 );
 
 const importData = async () => {
   try {
-    await Tour.create(tours);
+    await Tour.create(tours, { validateBeforeSave: false });
+    await User.create(users, { validateBeforeSave: false });
+    await Review.create(reviews);
     process.exit();
   } catch (err) {
     console.log(err);
@@ -33,6 +42,8 @@ const importData = async () => {
 const deleteData = async () => {
   try {
     await Tour.deleteMany();
+    await User.deleteMany();
+    await Review.deleteMany();
     process.exit();
   } catch (err) {
     console.log(err);
